@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        margin: 0;
+        font-family: "Inter", sans-serif;
+        background-color: #121212;
+        color: white;
+      }
+
+      .container {
+        padding: 24px;
+      }
+
+      #welcomeScreen {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: radial-gradient(circle at top, #1e1e1e 0%, #121212 100%);
+        animation: fadeIn 1s ease-in-out;
+        overflow: hidden;
+      }
+
+      #welcomeScreen h1 {
+        font-size: 28px;
+        margin-bottom: 12px;
+      }
+
+      #welcomeScreen p {
+        font-size: 15px;
+        color: #ccc;
+      }
+
+      #startBtn {
+        margin-top: 32px;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #3f3f3f, #252525);
+        color: #fff;
+        font-weight: bold;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      #startBtn:hover {
+        background: linear-gradient(135deg, #4a4a4a, #2d2d2d);
+      }
+
+      #mainUI {
+        display: none;
+        padding: 20px;
+        height: 90vh;
+        background: radial-gradient(circle at top, #1e1e1e 0%, #121212 100%);
+        animation: fadeIn 0.6s ease-in-out;
+      }
+
+      .scroll-box {
+        width: 100%;
+        max-height: auto;
+        overflow-y: auto;
+        padding-right: 8px;
+        padding-bottom: 48px;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 2px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #2c2c2c;
+        border-radius: 8px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #555;
+        border-radius: 8px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #777;
+      }
+
+      .font-row {
+        background: #1d1d1d;
+        border-radius: 12px;
+        padding: 16px;
+        gap: 6px;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 16px;
+        animation: fadeIn 0.3s ease-in-out;
+        transition: background 0.3s ease;
+      }
+
+      .font-label {
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #ccc;
+      }
+
+      .autocomplete {
+        position: relative;
+      }
+
+      input.font-input {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #2c2c2c;
+        color: white;
+        outline: none;
+      }
+
+      .suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #2c2c2c;
+        border-radius: 0 0 8px 8px;
+        max-height: 120px;
+        overflow-y: auto;
+        z-index: 10;
+      }
+
+      .suggestions div {
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      .suggestions div:hover {
+        background: #3a3a3a;
+      }
+
+      select.style-select {
+        width: 100%;
+        padding: 10px;
+        margin-top: 6px;
+        border: none;
+        border-radius: 8px;
+        background: #2c2c2c;
+        color: white;
+      }
+
+      button.replace-btn {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        padding: 12px;
+        background: linear-gradient(135deg, #444, #2c2c2c);
+        color: #fff;
+        font-weight: bold;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.3s ease;
+      }
+
+      button.replace-btn:hover {
+        background: linear-gradient(135deg, #555, #333);
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Welcome Screen -->
+    <div id="welcomeScreen">
+      <h1>👋 Welcome to Font Replacer Pro</h1>
+      <p>Smartly detect and replace fonts across your Figma designs.</p>
+      <button id="startBtn">Let’s Get Started</button>
+    </div>
+
+    <!-- Main UI -->
+    <div id="mainUI">
+      <h1 style="margin-bottom: 16px">Detected Fonts</h1>
+      <div class="scroll-box" id="fontList">Loading fonts...</div>
+      <button class="replace-btn" id="replaceBtn">Replace Fonts</button>
+    </div>
+
+    <script>
+      // --- Load Font Data ---
+      window.FONT_DATA = {
+        Inter: [
+          "Thin",
+          "ExtraLight",
+          "Light",
+          "Regular",
+          "Medium",
+          "SemiBold",
+          "Bold",
+          "ExtraBold",
+          "Black",
+        ],
+        "DM Sans": ["Regular", "Medium", "Bold"],
+        Roboto: ["Thin", "Light", "Regular", "Medium", "Bold", "Black"],
+        "Open Sans": ["Light", "Regular", "SemiBold", "Bold", "ExtraBold"],
+        Lato: ["Light", "Regular", "Bold", "Black"],
+        Montserrat: [
+          "Thin",
+          "ExtraLight",
+          "Light",
+          "Regular",
+          "Medium",
+          "SemiBold",
+          "Bold",
+          "ExtraBold",
+          "Black",
+        ],
+        Poppins: [
+          "Thin",
+          "ExtraLight",
+          "Light",
+          "Regular",
+          "Medium",
+          "SemiBold",
+          "Bold",
+          "ExtraBold",
+          "Black",
+        ],
+        "Work Sans": [
+          "Thin",
+          "ExtraLight",
+          "Light",
+          "Regular",
+          "Medium",
+          "SemiBold",
+          "Bold",
+          "ExtraBold",
+          "Black",
+        ],
+        "Noto Sans": ["Regular", "Bold"],
+        "Playfair Display": ["Regular", "Medium", "SemiBold", "Bold", "Black"],
+        "Cabinet Grotesk": ["Light", "Regular", "Medium", "Bold"],
+        "Futura PT": ["Book", "Medium", "Demi", "Bold", "Heavy"],
+        "Avenir Next": [
+          "UltraLight",
+          "Regular",
+          "Medium",
+          "DemiBold",
+          "Bold",
+          "Heavy",
+        ],
+        "Helvetica Neue": [
+          "UltraLight",
+          "Light",
+          "Regular",
+          "Medium",
+          "Bold",
+          "Heavy",
+        ],
+        "Proxima Nova": [
+          "Thin",
+          "Light",
+          "Regular",
+          "SemiBold",
+          "Bold",
+          "Black",
+        ],
+        Garamond: ["Regular", "Italic", "Bold"],
+        "Adobe Garamond Pro": ["Regular", "Italic", "Bold", "Semibold"],
+        "Minion Pro": ["Regular", "Italic", "Bold", "Semibold"],
+        Baskerville: ["Regular", "Italic", "Bold"],
+        Georgia: ["Regular", "Bold", "Italic", "Bold Italic"],
+        "Times New Roman": ["Regular", "Italic", "Bold", "Bold Italic"],
+        "Courier New": ["Regular", "Bold", "Italic", "Bold Italic"],
+        Arial: ["Regular", "Bold", "Italic", "Bold Italic"],
+        Verdana: ["Regular", "Bold", "Italic", "Bold Italic"],
+        "Trebuchet MS": ["Regular", "Bold", "Italic", "Bold Italic"],
+      };
+
+      const allFontData = window.FONT_DATA || {};
+      const allFontFamilies = Object.keys(allFontData);
+
+      // --- DOM Elements ---
+      const replaceBtn = document.getElementById("replaceBtn");
+      const fontList = document.getElementById("fontList");
+      const mainUI = document.getElementById("mainUI");
+      const welcomeScreen = document.getElementById("welcomeScreen");
+      const startBtn = document.getElementById("startBtn");
+
+      let detectedFonts = [];
+      let isReplacing = false;
+
+      // --- Helpers ---
+      function setReplaceButtonState(enabled, text = "Replace Fonts") {
+        replaceBtn.disabled = !enabled;
+        replaceBtn.style.opacity = enabled ? "1" : "0.5";
+        replaceBtn.style.cursor = enabled ? "pointer" : "not-allowed";
+        replaceBtn.textContent = text;
+      }
+      setReplaceButtonState(false, "Detecting Fonts...");
+
+      // --- Autocomplete Input ---
+      function createAutocompleteInput(index, styleSelect, populateStyles) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "autocomplete";
+
+        const input = document.createElement("input");
+        input.className = "font-input";
+        input.placeholder = "Type replacement font...";
+        input.setAttribute("data-index", index);
+        input.setAttribute("autocomplete", "off");
+        wrapper.appendChild(input);
+
+        const suggestions = document.createElement("div");
+        suggestions.className = "suggestions";
+        suggestions.style.display = "none";
+        wrapper.appendChild(suggestions);
+
+        let debounceTimer;
+        input.addEventListener("input", () => {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            const val = input.value.trim().toLowerCase();
+            suggestions.innerHTML = "";
+
+            if (!val) {
+              suggestions.style.display = "none";
+              return;
+            }
+
+            const startsWithMatches = allFontFamilies.filter((f) =>
+              f.toLowerCase().startsWith(val)
+            );
+            const includesMatches = allFontFamilies.filter(
+              (f) =>
+                f.toLowerCase().includes(val) &&
+                !f.toLowerCase().startsWith(val)
+            );
+            const matches = [...startsWithMatches, ...includesMatches].slice(
+              0,
+              15
+            );
+
+            if (matches.length) {
+              suggestions.style.display = "block";
+              matches.forEach((font) => {
+                const div = document.createElement("div");
+                div.textContent = font;
+                div.onclick = () => {
+                  input.value = font;
+                  suggestions.style.display = "none";
+
+                  const availableStyles = allFontData[font] || ["Regular"];
+                  const currentSelectedStyle = styleSelect.value;
+                  populateStyles(availableStyles, currentSelectedStyle);
+                };
+                suggestions.appendChild(div);
+              });
+            } else {
+              suggestions.style.display = "none";
+            }
+          }, 150);
+        });
+
+        document.addEventListener(
+          "click",
+          (e) => {
+            if (!wrapper.contains(e.target)) {
+              suggestions.style.display = "none";
+            }
+          },
+          true
+        );
+
+        return { wrapper, input };
+      }
+
+      // --- Render UI ---
+      function renderFontMapUI(fonts) {
+        fontList.innerHTML = "";
+
+        if (!fonts || fonts.length === 0) {
+          fontList.innerHTML =
+            "<p style='text-align:center; color:#888; padding: 20px;'>No fonts detected in the selection.</p>";
+          setReplaceButtonState(false, "No Fonts Detected");
+          return;
+        }
+
+        fonts.forEach((font, i) => {
+          const row = document.createElement("div");
+          row.className = "font-row";
+          row.dataset.originalFamily = font.family;
+          row.dataset.originalStyle = font.style;
+
+          const label = document.createElement("div");
+          label.className = "font-label";
+          label.innerHTML = `<strong>${font.family}</strong> <span style="color: #888">(${font.style})</span> →`;
+          row.appendChild(label);
+
+          // Style Select
+          const styleSelect = document.createElement("select");
+          styleSelect.id = `style-${i}`;
+          styleSelect.className = "style-select";
+
+          const populateStyles = (availableStyles, selectedStyle) => {
+            styleSelect.innerHTML = "";
+            availableStyles.forEach((style) => {
+              const opt = document.createElement("option");
+              opt.value = style;
+              opt.textContent = style;
+              styleSelect.appendChild(opt);
+            });
+            styleSelect.value = availableStyles.includes(selectedStyle)
+              ? selectedStyle
+              : availableStyles.includes("Regular")
+              ? "Regular"
+              : availableStyles[0];
+          };
+          // Font Input with autocomplete
+          const { wrapper: inputWrapper, input } = createAutocompleteInput(
+            i,
+            styleSelect,
+            populateStyles
+          );
+          input.id = `family-${i}`;
+          row.appendChild(inputWrapper);
+
+          fontList.appendChild(row);
+
+          const defaultStyles = allFontData[font.family] || ["Regular"];
+          populateStyles(defaultStyles, font.style);
+          row.appendChild(styleSelect);
+        });
+
+        setReplaceButtonState(true, "Replace Fonts");
+        fontList.scrollTop = fontList.scrollHeight;
+      }
+
+      // --- Events ---
+      startBtn.onclick = () => {
+        welcomeScreen.style.display = "none";
+        mainUI.style.display = "block";
+        fontList.innerHTML =
+          "<p style='text-align:center; color:#888; padding: 20px;'>Waiting for font detection results...</p>";
+      };
+
+      replaceBtn.onclick = () => {
+        if (replaceBtn.disabled || isReplacing) return;
+
+        const mappings = [];
+        const fontRows = fontList.querySelectorAll(".font-row");
+
+        fontRows.forEach((row, i) => {
+          const familyInput = row.querySelector(`#family-${i}`);
+          const styleSelect = row.querySelector(`#style-${i}`);
+          const destFamily = familyInput?.value.trim();
+          if (destFamily) {
+            mappings.push({
+              source: {
+                family: row.dataset.originalFamily,
+                style: row.dataset.originalStyle,
+              },
+              dest: {
+                family: destFamily,
+                style: styleSelect?.value || "Regular",
+              },
+            });
+          }
+        });
+
+        if (mappings.length === 0) {
+          alert("Please enter at least one replacement font.");
+          return;
+        }
+
+        isReplacing = true;
+        setReplaceButtonState(false, "Replacing...");
+
+        parent.postMessage(
+          { pluginMessage: { type: "replace-fonts", mappings } },
+          "*"
+        );
+
+        setTimeout(() => {
+          setReplaceButtonState(true, "Replace Fonts");
+          isReplacing = false;
+        }, 1000);
+      };
+
+      // --- Message Receiver ---
+      window.onmessage = (event) => {
+        const msg = event.data.pluginMessage;
+        if (!msg) return;
+
+        if (msg.type === "fonts-detected") {
+          isReplacing = false;
+          detectedFonts = msg.fonts || [];
+          renderFontMapUI(detectedFonts);
+        }
+
+        if (msg.type === "error" || msg.type === "replacement-error") {
+          isReplacing = false;
+          setReplaceButtonState(true, "Replace Fonts");
+          alert(`An error occurred: ${msg.error || "Unknown error"}`);
+        }
+      };
+    </script>
+  </body>
+</html>

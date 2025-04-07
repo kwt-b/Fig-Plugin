@@ -1,0 +1,28 @@
+window.FONT_DATA = {
+    "Inter": ["Thin", "ExtraLight", "Light", "Regular", "Medium", "SemiBold", "Bold", "ExtraBold", "Black"],
+    "DM Sans": ["Regular", "Medium", "Bold"],
+    "Roboto": ["Thin", "Light", "Regular", "Medium", "Bold", "Black"],
+    "Open Sans": ["Light", "Regular", "SemiBold", "Bold", "ExtraBold"],
+    "Lato": ["Light", "Regular", "Bold", "Black"],
+    "Montserrat": ["Thin", "ExtraLight", "Light", "Regular", "Medium", "SemiBold", "Bold", "ExtraBold", "Black"],
+    "Poppins": ["Thin", "ExtraLight", "Light", "Regular", "Medium", "SemiBold", "Bold", "ExtraBold", "Black"],
+    "Work Sans": ["Thin", "ExtraLight", "Light", "Regular", "Medium", "SemiBold", "Bold", "ExtraBold", "Black"],
+    "Noto Sans": ["Regular", "Bold"],
+    "Playfair Display": ["Regular", "Medium", "SemiBold", "Bold", "Black"],
+    "Cabinet Grotesk": ["Light", "Regular", "Medium", "Bold"],
+    "Futura PT": ["Book", "Medium", "Demi", "Bold", "Heavy"],
+    "Avenir Next": ["UltraLight", "Regular", "Medium", "DemiBold", "Bold", "Heavy"],
+    "Helvetica Neue": ["UltraLight", "Light", "Regular", "Medium", "Bold", "Heavy"],
+    "Proxima Nova": ["Thin", "Light", "Regular", "SemiBold", "Bold", "Black"],
+    "Garamond": ["Regular", "Italic", "Bold"],
+    "Adobe Garamond Pro": ["Regular", "Italic", "Bold", "Semibold"],
+    "Minion Pro": ["Regular", "Italic", "Bold", "Semibold"],
+    "Baskerville": ["Regular", "Italic", "Bold"],
+    "Georgia": ["Regular", "Bold", "Italic", "Bold Italic"],
+    "Times New Roman": ["Regular", "Italic", "Bold", "Bold Italic"],
+    "Courier New": ["Regular", "Bold", "Italic", "Bold Italic"],
+    "Arial": ["Regular", "Bold", "Italic", "Bold Italic"],
+    "Verdana": ["Regular", "Bold", "Italic", "Bold Italic"],
+    "Trebuchet MS": ["Regular", "Bold", "Italic", "Bold Italic"]
+  }
+  

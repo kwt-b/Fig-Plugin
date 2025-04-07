@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Export Frame</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Inter, sans-serif;
+      background-color: #1e1e1e;
+      color: #f5f5f5;
+      padding: 24px;
+      transition: background-color 0.3s ease;
+    }
+
+    .screen {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .active {
+      display: block;
+      opacity: 1;
+    }
+
+    h1, h2, h3, p {
+      margin-bottom: 10px;
+    }
+
+    .preview {
+      width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      border: 1px solid #444;
+      background: #2c2c2c;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .preview:hover {
+      box-shadow: 0 0 8px rgba(0, 122, 255, 0.3);
+      border-color: #007aff;
+    }
+
+    select, input[type="number"] {
+      background: #2e2e2e;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 14px;
+      margin-bottom: 14px;
+      width: 100%;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+
+    select:focus, input[type="number"]:focus {
+      border-color: #007aff;
+      box-shadow: 0 0 5px rgba(0, 122, 255, 0.5);
+      outline: none;
+    }
+
+    .button {
+      background: linear-gradient(145deg, #007aff, #005bb5);
+      color: white;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 14px;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 6px rgba(0, 122, 255, 0.3);
+    }
+
+    .button:hover {
+      background: linear-gradient(145deg, #339dff, #007aff);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0, 122, 255, 0.5);
+    }
+
+    .button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 5px rgba(0, 122, 255, 0.3);
+    }
+
+    .error {
+      color: #ff6b6b;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    .info {
+      font-size: 13px;
+      color: #aaa;
+      margin-top: -6px;
+      margin-bottom: 14px;
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #999;
+    }
+
+    .center {
+      text-align: center;
+      margin-top: 80px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Export Frame</h2>
+  <p id="frameInfo">No frame selected</p>
+  <img id="previewImg" class="preview" src="" alt="Preview" />
+
+  <label for="formatSelect">Format:</label>
+  <select id="formatSelect">
+    <option value="PNG">PNG</option>
+    <option value="JPG">JPG</option>
+    <option value="SVG">SVG</option>
+    <option value="PDF">PDF</option>
+    <option value="WEBP">WEBP</option>
+
+  </select>
+
+  <label for="scaleInput">Scale (0.2 to 4):</label>
+  <input type="number" id="scaleInput" min="0.2" max="4" step="0.1" value="1" />
+  <p id="dimInfo" class="info"></p>
+
+  <button id="exportBtn" class="button">Export & Save</button>
+  <p id="errorMsg" class="error"></p>
+
+  <script>
+    const frameInfo = document.getElementById("frameInfo");
+    const previewImg = document.getElementById("previewImg");
+    const formatSelect = document.getElementById("formatSelect");
+    const scaleInput = document.getElementById("scaleInput");
+    const exportBtn = document.getElementById("exportBtn");
+    const errorMsg = document.getElementById("errorMsg");
+    const dimInfo = document.getElementById("dimInfo");
+  
+    let originalWidth = 0;
+    let originalHeight = 0;
+    let latestBase64 = ""; // For preview image
+    let latestFrameName = "";
+  
+    onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+  
+      if (msg.type === "frame-selected") {
+        latestFrameName = msg.name;
+        frameInfo.textContent = `${msg.name}`;
+        previewImg.src = `data:image/png;base64,${msg.preview}`;
+        latestBase64 = msg.preview;
+        originalWidth = msg.width;
+        originalHeight = msg.height;
+        updateDimensions();
+      }
+  
+      if (msg.type === "no-frame") {
+        frameInfo.textContent = "No frame selected.";
+        previewImg.src = "";
+        dimInfo.textContent = "";
+      }
+  
+      if (msg.type === "error") {
+        errorMsg.textContent = msg.message;
+      }
+  
+      if (msg.type === "export-done") {
+        if (formatSelect.value === "WEBP") {
+          convertPngToWebp(msg.bytes, latestFrameName);
+          return;
+        }
+  
+        const link = document.createElement("a");
+        link.download = `${msg.name}.${msg.format.toLowerCase()}`;
+        link.href = `data:image/${msg.format.toLowerCase()};base64,${msg.bytes}`;
+        link.click();
+      }
+    };
+  
+    scaleInput.oninput = () => updateDimensions();
+  
+    function updateDimensions() {
+      const scale = parseFloat(scaleInput.value);
+      if (!isNaN(scale) && originalWidth && originalHeight) {
+        dimInfo.textContent = `Export Size: ${Math.round(originalWidth * scale)} x ${Math.round(originalHeight * scale)} px`;
+      } else {
+        dimInfo.textContent = "";
+      }
+    }
+  
+    exportBtn.onclick = () => {
+      errorMsg.textContent = "";
+      const format = formatSelect.value;
+      const scale = parseFloat(scaleInput.value);
+      if (isNaN(scale) || scale < 0.2 || scale > 4) {
+        errorMsg.textContent = "Scale must be between 0.2 and 4.";
+        return;
+      }
+  
+      parent.postMessage({ pluginMessage: { type: 'export-frame', format, scale } }, '*');
+    };
+  
+    function convertPngToWebp(base64Png, filename) {
+      const img = new Image();
+      img.src = `data:image/png;base64,${base64Png}`;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+  
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+  
+        canvas.toBlob((blob) => {
+          const link = document.createElement('a');
+          link.download = `${filename}.webp`;
+          link.href = URL.createObjectURL(blob);
+          link.click();
+        }, 'image/webp');
+      };
+    }
+  
+    parent.postMessage({ pluginMessage: { type: 'request-frame' } }, '*');
+  </script>
+  
+</body>
+</html>
