@@ -174,13 +174,13 @@
           }`;
           link.click();
         }
-        if (msg.type === "export-done") {
-          const link = document.createElement("a");
-          const ext = msg.format.toLowerCase();
-          link.download = `${msg.name}.${ext}`;
-          link.href = `data:image/png;base64,${msg.bytes}`; // still PNG content
-          link.click();
-        }
+        // if (msg.type === "export-done") {
+        //   const link = document.createElement("a");
+        //   const ext = msg.format.toLowerCase();
+        //   link.download = `${msg.name}.${ext}`;
+        //   link.href = `data:image/png;base64,${msg.bytes}`; // still PNG content
+        //   link.click();
+        // }
 
         if (msg.type === "error") {
           errorMsg.textContent = msg.message;
