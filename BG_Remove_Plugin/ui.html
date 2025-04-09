@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      background: #121212;
+      color: #fff;
+      font-family: sans-serif;
+      padding: 16px;
+    }
+    button, select {
+      background: #333;
+      color: white;
+      padding: 8px 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    img {
+      margin-top: 10px;
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    #status::after {
+    content: "";
+    display: inline-block;
+    margin-left: 10px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  #status:empty::after {
+    display: none;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  </style>
+</head>
+<body>
+  <h2>Remove Background</h2>
+  <button id="removeBtn">Remove Background</button>
+  <div id="status"></div>
+<div id="preview"></div>
+
+  <label>Download as:</label>
+  <select id="formatSelect">
+    <option value="png">PNG</option>
+    <option value="jpg">JPG</option>
+    <option value="jpeg">JPEG</option>
+    <option value="svg">SVG</option>
+    <option value="pdf">PDF</option>
+  </select>
+  <button id="downloadBtn">Download</button>
+
+  <script>
+    let blobURL = null;
+  
+    const status = document.getElementById('status');
+    const preview = document.getElementById('preview');
+  
+    document.getElementById('removeBtn').onclick = () => {
+      status.innerText = "Processing...";
+      preview.innerHTML = "";
+      parent.postMessage({ pluginMessage: { type: 'remove-bg' } }, '*');
+    };
+  
+    window.onmessage = async (event) => {
+      const msg = event.data.pluginMessage;
+      if (msg.type === 'image-bytes') {
+        const blob = new Blob([new Uint8Array(msg.bytes)], { type: 'image/png' });
+  
+        const formData = new FormData();
+        formData.append('image_file', blob);
+        formData.append('format', 'auto');
+  
+        try {
+          const response = await fetch('https://sdk.photoroom.com/v1/segment', {
+            method: 'POST',
+            headers: {
+              'x-api-key': 'sandbox_02546373b2c78ec94697534281828077628776cd' // Replace with your actual key
+            },
+            body: formData
+          });
+  
+          if (!response.ok) {
+            status.innerText = "Failed to remove background.";
+            return;
+          }
+  
+          const resultBlob = await response.blob();
+          blobURL = URL.createObjectURL(resultBlob);
+  
+          preview.innerHTML = `<img src="${blobURL}" />`;
+          status.innerText = "Background removed!";
+        } catch (err) {
+          status.innerText = "Error during processing.";
+          console.error(err);
+        }
+      }
+    };
+  
+    document.getElementById('downloadBtn').onclick = () => {
+      if (!blobURL) return alert("No image to download.");
+      const format = document.getElementById('formatSelect').value;
+  
+      const a = document.createElement('a');
+      a.href = blobURL;
+      a.download = `no-bg.${format}`;
+      a.click();
+    };
+  </script>
+  
+</body>
+</html>
