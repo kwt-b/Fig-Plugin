@@ -1,9 +1,0 @@
-{
-  "devDependencies": {
-    "@figma/plugin-typings": "^1.109.0"
-  }
-}
-  // "devDependencies": {
-      // "@figma/plugin-typings": "*",
-  //   "@figma/plugin-typings": "^1.109.0"
-  // },
